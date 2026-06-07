@@ -137,18 +137,43 @@
   // --- Rendering ---
   function renderSuggestion() {
     const suggestion = getNextSuggestion();
-    const container = document.getElementById('suggestion-grid');
+    // Set the form first so the corresponding choice is known, then paint
+    // the grid so its marker reflects the actual (possibly overridden) choice.
+    prefillForm(suggestion);
+    paintSuggestionGrid(suggestion);
+  }
 
-    container.innerHTML = POSITIONS.map(pos => `
-      <div class="suggestion-item animate-in${pos === 'fifth' ? ' is-corresponding' : ''}">
+  // Who is the corresponding author right now, per the form controls.
+  function getCurrentCorresponding() {
+    const corrIsLast = document.getElementById('corr-is-last');
+    const corrSelect = document.getElementById('select-corresponding');
+    const fifth = document.getElementById('select-fifth');
+    if (corrIsLast && !corrIsLast.checked && corrSelect && corrSelect.value) {
+      return corrSelect.value;
+    }
+    return fifth ? fifth.value : '';
+  }
+
+  function paintSuggestionGrid(suggestion) {
+    const container = document.getElementById('suggestion-grid');
+    if (!container) return;
+    const corrName = getCurrentCorresponding();
+    container.innerHTML = POSITIONS.map(pos => {
+      const isCorr = suggestion[pos] === corrName;
+      return `
+      <div class="suggestion-item animate-in${isCorr ? ' is-corresponding' : ''}">
         <div class="role-number">${POSITION_NUM[pos]}</div>
         <div class="role-label">${POSITION_LABEL[pos]}</div>
         <div class="author-name">${suggestion[pos]}</div>
-        ${pos === 'fifth' ? '<div class="corr-tag">✉ Corresponding</div>' : ''}
-      </div>
-    `).join('');
+        <div class="corr-tag">Corresponding</div>
+      </div>`;
+    }).join('');
+  }
 
-    prefillForm(suggestion);
+  // Re-sync + repaint when the corresponding choice changes in the form.
+  function onCorrChange() {
+    syncCorrControl();
+    paintSuggestionGrid(getNextSuggestion());
   }
 
   function prefillForm(suggestion) {
@@ -227,14 +252,17 @@
           const norm = normalizePaper(p);
           const authors = norm.ordered.map(a => {
             const isCorr = a.name === norm.corresponding;
-            return `<span class="pa${isCorr ? ' is-corr' : ''}">${escapeHtml(a.name)}` +
-              (isCorr ? '<span class="corr-mark" title="Corresponding author">✉</span>' : '') +
-              `</span>`;
+            return `<span class="pa${isCorr ? ' is-corr' : ''}">${escapeHtml(a.name)}</span>`;
           }).join('');
-          const meta = p.addedBy
-            ? `<div class="paper-item-meta">Added by <strong>${escapeHtml(p.addedBy)}</strong>` +
-              (p.timestamp ? ` · ${formatStamp(p.timestamp)}` : '') + `</div>`
-            : '';
+          const metaItems = [];
+          if (norm.corresponding) {
+            metaItems.push(`<span class="meta-item"><span class="meta-k">Corresponding</span>${escapeHtml(norm.corresponding)}</span>`);
+          }
+          if (p.addedBy) {
+            metaItems.push(`<span class="meta-item"><span class="meta-k">Added by</span>${escapeHtml(p.addedBy)}` +
+              (p.timestamp ? ` · ${formatStamp(p.timestamp)}` : '') + `</span>`);
+          }
+          const meta = metaItems.length ? `<div class="paper-item-meta">${metaItems.join('')}</div>` : '';
           return `
           <article class="paper-item">
             <div class="paper-item-top">
@@ -423,9 +451,11 @@
       }
     });
 
-    // Corresponding-author toggle
+    // Corresponding-author controls — repaint the suggestion grid on change.
     const corrIsLast = document.getElementById('corr-is-last');
-    if (corrIsLast) corrIsLast.addEventListener('change', syncCorrControl);
+    if (corrIsLast) corrIsLast.addEventListener('change', onCorrChange);
+    const corrSelect = document.getElementById('select-corresponding');
+    if (corrSelect) corrSelect.addEventListener('change', onCorrChange);
 
     // "Added by" select — for transparency, remembers the last person used.
     const addedBySelect = document.getElementById('select-added-by');

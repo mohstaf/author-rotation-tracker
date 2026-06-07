@@ -230,8 +230,11 @@ body {
 
 .suggestion-item {
   background: var(--bg-main);
-  padding: 24px 20px;
+  padding: 22px 16px;
   text-align: center;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
   transition: background var(--transition);
   cursor: default;
 }
@@ -240,8 +243,23 @@ body {
   background: var(--bg-secondary);
 }
 
+.suggestion-item .role-number {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 24px;
+  height: 24px;
+  border-radius: 50%;
+  background: var(--accent-subtle);
+  color: var(--text-secondary);
+  font-size: 0.7rem;
+  font-weight: 700;
+  margin-bottom: 12px;
+  transition: background var(--transition), color var(--transition);
+}
+
 .suggestion-item .role-label {
-  font-size: 0.65rem;
+  font-size: 0.62rem;
   font-weight: 700;
   text-transform: uppercase;
   letter-spacing: 1px;
@@ -250,35 +268,32 @@ body {
   white-space: nowrap;
 }
 
-.suggestion-item .role-number {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  width: 22px;
-  height: 22px;
-  border-radius: 50%;
-  background: var(--accent-subtle);
-  color: var(--text-secondary);
-  font-size: 0.7rem;
-  font-weight: 700;
-  margin-bottom: 10px;
-}
-
 .suggestion-item .author-name {
   font-size: 0.82rem;
   font-weight: 600;
   color: var(--text-primary);
-  line-height: 1.3;
+  line-height: 1.35;
   overflow-wrap: anywhere;
 }
 
+/* Corresponding author — filled number circle + label, shown only on that card */
 .suggestion-item .corr-tag {
-  margin-top: 8px;
-  font-size: 0.58rem;
+  display: none;
+  margin-top: 10px;
+  font-size: 0.56rem;
   font-weight: 700;
   text-transform: uppercase;
-  letter-spacing: 0.5px;
+  letter-spacing: 0.6px;
   color: var(--accent);
+}
+
+.suggestion-item.is-corresponding .role-number {
+  background: var(--accent);
+  color: var(--bg-main);
+}
+
+.suggestion-item.is-corresponding .corr-tag {
+  display: block;
 }
 
 /* --- Form --- */
@@ -503,12 +518,32 @@ body {
 }
 
 .paper-item {
-  padding: 18px 2px;
+  position: relative;
+  padding: 16px 2px;
   border-bottom: 1px solid var(--border);
+  transition: background var(--transition);
 }
 
 .paper-item:last-child {
   border-bottom: none;
+}
+
+/* Hover: a quiet accent bar slides into the left gutter — no layout shift */
+.paper-item::before {
+  content: "";
+  position: absolute;
+  left: -14px;
+  top: 0;
+  bottom: -1px;
+  width: 2px;
+  border-radius: 2px;
+  background: var(--accent);
+  opacity: 0;
+  transition: opacity var(--transition);
+}
+
+.paper-item:hover::before {
+  opacity: 0.5;
 }
 
 .paper-item-top {
@@ -524,6 +559,11 @@ body {
   font-weight: 600;
   color: var(--text-faint);
   font-variant-numeric: tabular-nums;
+  transition: color var(--transition);
+}
+
+.paper-item:hover .paper-item-num {
+  color: var(--text-secondary);
 }
 
 .paper-item-date {
@@ -555,27 +595,28 @@ body {
   color: var(--text-faint);
 }
 
-/* Corresponding author — subtle emphasis + envelope, no badges */
+/* Corresponding author — quiet emphasis; the explicit label lives in the meta row */
 .paper-item-authors .pa.is-corr {
   color: var(--text-primary);
   font-weight: 500;
 }
 
-.paper-item-authors .corr-mark {
-  margin-left: 3px;
-  font-size: 0.82em;
-  color: var(--text-muted);
-}
-
 .paper-item-meta {
-  margin-top: 8px;
-  font-size: 0.72rem;
-  color: var(--text-muted);
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px 18px;
+  margin-top: 10px;
+  font-size: 0.74rem;
+  color: var(--text-secondary);
 }
 
-.paper-item-meta strong {
-  color: var(--text-secondary);
-  font-weight: 600;
+.paper-item-meta .meta-k {
+  font-size: 0.6rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.6px;
+  color: var(--text-muted);
+  margin-right: 6px;
 }
 
 /* Role badges – monochrome */
