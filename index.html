@@ -6,7 +6,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Author Rotation Tracker – Research Sharks</title>
   <meta name="description" content="Track and suggest fair authorship rotation for the Research Sharks Network." />
-  <link rel="stylesheet" href="styles.css?v=10" />
+  <link rel="stylesheet" href="styles.css?v=11" />
   <link rel="icon"
     href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🦈</text></svg>" />
 </head>
@@ -91,13 +91,9 @@
             <label for="select-fourth"><span class="role-indicator"></span>Fourth Author</label>
             <select id="select-fourth" disabled></select>
           </div>
-          <div class="form-group">
+          <div class="form-group full-width">
             <label for="select-fifth"><span class="role-indicator"></span>Fifth Author</label>
             <select id="select-fifth" disabled></select>
-          </div>
-          <div class="form-group">
-            <label for="select-added-by">Added by</label>
-            <select id="select-added-by"></select>
           </div>
           <div class="form-group full-width">
             <label for="select-corresponding">Corresponding Author</label>
@@ -128,13 +124,30 @@
 
   </div>
 
+  <!-- Add confirmation modal -->
+  <div id="confirm-modal" class="modal-overlay" hidden>
+    <div class="modal" role="dialog" aria-modal="true" aria-labelledby="modal-title">
+      <div class="modal-title" id="modal-title">Add paper</div>
+      <p class="modal-sub">Confirm who is adding this entry — it's recorded for transparency.</p>
+      <div class="modal-paper" id="modal-paper-title"></div>
+      <div class="form-group">
+        <label for="select-added-by">Added by</label>
+        <select id="select-added-by"></select>
+      </div>
+      <div class="modal-actions">
+        <button class="btn btn-secondary" id="btn-cancel-add">Cancel</button>
+        <button class="btn btn-primary" id="btn-confirm-add">Add paper</button>
+      </div>
+    </div>
+  </div>
+
   <!-- Toast -->
   <div id="toast" class="toast"></div>
 
   <!-- Firebase SDK -->
   <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-app-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-database-compat.js"></script>
-  <script src="app.js?v=10"></script>
+  <script src="app.js?v=11"></script>
 </body>
 
 </html>

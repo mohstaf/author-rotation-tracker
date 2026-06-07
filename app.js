@@ -341,39 +341,65 @@
   }
 
   // --- Actions ---
+  // Step 1: validate the paper, then ask who's adding it (transparency gate).
   function addPaper() {
     const titleInput = document.getElementById('paper-title');
-    const addedBySelect = document.getElementById('select-added-by');
-    const title = titleInput.value.trim();
-    const date = document.getElementById('paper-date').value;
-    const month = document.getElementById('paper-month').value;
-
-    if (!title) {
+    if (!titleInput.value.trim()) {
       showToast('Please enter a paper title.');
       titleInput.classList.add('field-error');
       titleInput.focus();
       return;
     }
 
-    if (!addedBySelect.value) {
-      showToast('Select your name in “Added by” before adding.');
-      addedBySelect.classList.add('field-error');
-      addedBySelect.focus();
-      addedBySelect.scrollIntoView({ behavior: 'smooth', block: 'center' });
-      return;
-    }
-    const addedBy = addedBySelect.value;
-
     const roles = {};
     POSITIONS.forEach(pos => {
       roles[pos] = document.getElementById('select-' + pos).value;
     });
-
     // Positions come from the locked rotation, so they should all be distinct.
     if (new Set(Object.values(roles)).size !== POSITIONS.length) {
       showToast('Each author must hold a unique position.');
       return;
     }
+
+    openConfirmModal(titleInput.value.trim());
+  }
+
+  function openConfirmModal(title) {
+    const modal = document.getElementById('confirm-modal');
+    if (!modal) return;
+    const preview = document.getElementById('modal-paper-title');
+    if (preview) preview.textContent = title;
+    const addedBy = document.getElementById('select-added-by');
+    if (addedBy) addedBy.classList.remove('field-error');
+    modal.hidden = false;
+    if (addedBy) setTimeout(() => addedBy.focus(), 0);
+  }
+
+  function closeConfirmModal() {
+    const modal = document.getElementById('confirm-modal');
+    if (modal) modal.hidden = true;
+  }
+
+  // Step 2: confirm who's adding, then write the paper.
+  function confirmAddPaper() {
+    const addedBySelect = document.getElementById('select-added-by');
+    if (!addedBySelect.value) {
+      showToast('Select your name to add the paper.');
+      addedBySelect.classList.add('field-error');
+      addedBySelect.focus();
+      return;
+    }
+    const addedBy = addedBySelect.value;
+    localStorage.setItem(ADDED_BY_KEY, addedBy); // remember for next time
+
+    const title = document.getElementById('paper-title').value.trim();
+    const date = document.getElementById('paper-date').value;
+    const month = document.getElementById('paper-month').value;
+
+    const roles = {};
+    POSITIONS.forEach(pos => {
+      roles[pos] = document.getElementById('select-' + pos).value;
+    });
 
     // Corresponding author: the last author by default, or a manual choice.
     const corrIsLast = document.getElementById('corr-is-last');
@@ -391,12 +417,10 @@
       timestamp: Date.now()
     };
 
-    // Remember who's adding so they don't re-pick each time.
-    localStorage.setItem(ADDED_BY_KEY, addedBy);
-
     addPaperToFirebase(paper).then(() => {
       document.getElementById('paper-title').value = '';
       document.getElementById('paper-date').value = new Date().toISOString().split('T')[0];
+      closeConfirmModal();
       showToast('Paper added ✓');
     }).catch(err => {
       showToast('Error saving — check connection');
@@ -499,6 +523,15 @@
     // Buttons
     document.getElementById('btn-add-paper').addEventListener('click', addPaper);
     document.getElementById('theme-toggle').addEventListener('click', toggleTheme);
+
+    // Confirmation modal ("Added by" prompt on Add)
+    const confirmBtn = document.getElementById('btn-confirm-add');
+    if (confirmBtn) confirmBtn.addEventListener('click', confirmAddPaper);
+    const cancelBtn = document.getElementById('btn-cancel-add');
+    if (cancelBtn) cancelBtn.addEventListener('click', closeConfirmModal);
+    const overlay = document.getElementById('confirm-modal');
+    if (overlay) overlay.addEventListener('click', (e) => { if (e.target === overlay) closeConfirmModal(); });
+    document.addEventListener('keydown', (e) => { if (e.key === 'Escape') closeConfirmModal(); });
 
     // Start listening for Firebase data (real-time sync)
     listenForPapers();
