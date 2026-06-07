@@ -496,10 +496,10 @@ tbody td {
 
 .paper-title-cell {
   font-weight: 500;
-  max-width: 320px;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
+  min-width: 240px;
+  max-width: 380px;
+  white-space: normal;
+  overflow-wrap: anywhere;
   color: var(--text-primary);
 }
 
