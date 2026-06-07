@@ -45,6 +45,7 @@
   ];
 
   const THEME_KEY = 'sharks_theme';
+  const ADDED_BY_KEY = 'sharks_added_by';
 
   // --- State ---
   let papers = [];
@@ -224,26 +225,25 @@
       <div class="paper-list">
         ${sorted.map((p, i) => {
           const norm = normalizePaper(p);
+          const authors = norm.ordered.map(a => {
+            const isCorr = a.name === norm.corresponding;
+            return `<span class="pa${isCorr ? ' is-corr' : ''}">${escapeHtml(a.name)}` +
+              (isCorr ? '<span class="corr-mark" title="Corresponding author">✉</span>' : '') +
+              `</span>`;
+          }).join('');
+          const meta = p.addedBy
+            ? `<div class="paper-item-meta">Added by <strong>${escapeHtml(p.addedBy)}</strong>` +
+              (p.timestamp ? ` · ${formatStamp(p.timestamp)}` : '') + `</div>`
+            : '';
           return `
-          <article class="paper-card">
-            <div class="paper-card-top">
-              <span class="paper-card-num">#${papers.length - i}</span>
-              <span class="paper-card-date">
-                <span class="paper-card-month">${escapeHtml(p.month || '—')}</span>
-                ${formatDate(p.date)}
-              </span>
+          <article class="paper-item">
+            <div class="paper-item-top">
+              <span class="paper-item-num">#${papers.length - i}</span>
+              <span class="paper-item-date">${formatDate(p.date)}</span>
             </div>
-            <h3 class="paper-card-title">${escapeHtml(p.title)}</h3>
-            <div class="paper-card-authors">
-              ${norm.ordered.map(a => {
-                const isCorr = a.name === norm.corresponding;
-                return `<span class="author-chip role-${a.num}${isCorr ? ' is-corresponding' : ''}">` +
-                  `<span class="chip-role">${a.num}</span>` +
-                  `<span class="chip-name">${escapeHtml(a.name)}</span>` +
-                  (isCorr ? '<span class="chip-corr" title="Corresponding author">✉</span>' : '') +
-                  `</span>`;
-              }).join('')}
-            </div>
+            <h3 class="paper-item-title">${escapeHtml(p.title)}</h3>
+            <div class="paper-item-authors">${authors}</div>
+            ${meta}
           </article>`;
         }).join('')}
       </div>`;
@@ -326,6 +326,12 @@
       return;
     }
 
+    const addedBy = document.getElementById('select-added-by').value;
+    if (!addedBy) {
+      showToast('Please select who is adding this paper.');
+      return;
+    }
+
     const roles = {};
     POSITIONS.forEach(pos => {
       roles[pos] = document.getElementById('select-' + pos).value;
@@ -349,8 +355,12 @@
       month,
       roles,
       corresponding,
+      addedBy,
       timestamp: Date.now()
     };
+
+    // Remember who's adding so they don't re-pick each time.
+    localStorage.setItem(ADDED_BY_KEY, addedBy);
 
     addPaperToFirebase(paper).then(() => {
       document.getElementById('paper-title').value = '';
@@ -370,6 +380,12 @@
     if (!dateStr) return '—';
     const d = new Date(dateStr + 'T00:00:00');
     return d.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
+  }
+
+  // Format a millisecond timestamp (record creation time) for the audit line.
+  function formatStamp(ts) {
+    if (!ts) return '';
+    return new Date(ts).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
   }
 
   function escapeHtml(str) {
@@ -410,6 +426,20 @@
     // Corresponding-author toggle
     const corrIsLast = document.getElementById('corr-is-last');
     if (corrIsLast) corrIsLast.addEventListener('change', syncCorrControl);
+
+    // "Added by" select — for transparency, remembers the last person used.
+    const addedBySelect = document.getElementById('select-added-by');
+    if (addedBySelect) {
+      const saved = localStorage.getItem(ADDED_BY_KEY) || '';
+      addedBySelect.innerHTML =
+        `<option value="" disabled${saved ? '' : ' selected'}>Select your name…</option>` +
+        TEAM.map(name =>
+          `<option value="${name}"${name === saved ? ' selected' : ''}>${name}</option>`
+        ).join('');
+      addedBySelect.addEventListener('change', () => {
+        if (addedBySelect.value) localStorage.setItem(ADDED_BY_KEY, addedBySelect.value);
+      });
+    }
 
     // Default date
     const dateInput = document.getElementById('paper-date');

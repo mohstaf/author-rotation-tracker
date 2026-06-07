@@ -495,129 +495,87 @@ body {
   border-bottom-color: var(--accent);
 }
 
-/* --- Paper Cards --- */
+/* --- Paper List (minimal) --- */
 .paper-list {
   display: flex;
   flex-direction: column;
-  gap: 10px;
-  padding-top: 18px;
+  padding-top: 4px;
 }
 
-.paper-card {
-  background: var(--bg-secondary);
-  border: 1px solid var(--border);
-  border-radius: var(--radius-lg);
-  padding: 16px 18px;
-  transition: border-color var(--transition), background var(--transition-slow);
+.paper-item {
+  padding: 18px 2px;
+  border-bottom: 1px solid var(--border);
 }
 
-.paper-card:hover {
-  border-color: var(--border-strong);
+.paper-item:last-child {
+  border-bottom: none;
 }
 
-.paper-card-top {
+.paper-item-top {
   display: flex;
-  align-items: center;
+  align-items: baseline;
   justify-content: space-between;
-  gap: 12px;
-  margin-bottom: 9px;
+  gap: 16px;
+  margin-bottom: 5px;
 }
 
-.paper-card-num {
+.paper-item-num {
   font-size: 0.72rem;
-  font-weight: 700;
+  font-weight: 600;
   color: var(--text-faint);
   font-variant-numeric: tabular-nums;
-  letter-spacing: 0.3px;
 }
 
-.paper-card-date {
-  display: inline-flex;
-  align-items: center;
-  gap: 8px;
+.paper-item-date {
   font-size: 0.74rem;
-  font-weight: 500;
   color: var(--text-muted);
   font-variant-numeric: tabular-nums;
-}
-
-.paper-card-month {
-  text-transform: uppercase;
-  letter-spacing: 0.6px;
-  font-weight: 700;
-  font-size: 0.62rem;
-  color: var(--text-secondary);
-  background: var(--accent-subtle);
-  padding: 3px 8px;
-  border-radius: 4px;
-}
-
-.paper-card-title {
-  font-size: 0.98rem;
-  font-weight: 600;
-  line-height: 1.45;
-  color: var(--text-primary);
-  margin-bottom: 14px;
-  letter-spacing: -0.2px;
-  overflow-wrap: anywhere;
-}
-
-.paper-card-authors {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 7px;
-}
-
-.author-chip {
-  display: inline-flex;
-  align-items: center;
-  gap: 7px;
-  padding: 3px 12px 3px 3px;
-  border-radius: 20px;
-  background: var(--bg-input);
-  border: 1px solid var(--border);
-  font-size: 0.78rem;
-  font-weight: 500;
-  color: var(--text-secondary);
-  transition: border-color var(--transition), color var(--transition);
-}
-
-.author-chip:hover {
-  border-color: var(--border-strong);
-  color: var(--text-primary);
-}
-
-.author-chip .chip-role {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  width: 20px;
-  height: 20px;
-  border-radius: 50%;
-  font-size: 0.66rem;
-  font-weight: 700;
+  white-space: nowrap;
   flex-shrink: 0;
 }
 
-.author-chip.role-1 .chip-role { background: var(--role-1-bg); color: var(--role-1); }
-.author-chip.role-2 .chip-role { background: var(--role-2-bg); color: var(--role-2); }
-.author-chip.role-3 .chip-role { background: var(--role-3-bg); color: var(--role-3); }
-.author-chip.role-4 .chip-role { background: var(--role-4-bg); color: var(--role-4); }
-.author-chip.role-5 .chip-role { background: var(--role-5-bg); color: var(--role-5); }
-
-/* Corresponding author — highlighted with an accent ring + envelope */
-.author-chip.is-corresponding {
-  border-color: var(--accent);
+.paper-item-title {
+  font-size: 0.96rem;
+  font-weight: 600;
+  line-height: 1.45;
   color: var(--text-primary);
+  letter-spacing: -0.2px;
+  margin-bottom: 8px;
+  overflow-wrap: anywhere;
 }
 
-.author-chip .chip-corr {
-  display: inline-flex;
-  align-items: center;
+.paper-item-authors {
+  font-size: 0.83rem;
+  line-height: 1.6;
+  color: var(--text-secondary);
+}
+
+.paper-item-authors .pa:not(:last-child)::after {
+  content: " · ";
+  color: var(--text-faint);
+}
+
+/* Corresponding author — subtle emphasis + envelope, no badges */
+.paper-item-authors .pa.is-corr {
+  color: var(--text-primary);
+  font-weight: 500;
+}
+
+.paper-item-authors .corr-mark {
+  margin-left: 3px;
+  font-size: 0.82em;
+  color: var(--text-muted);
+}
+
+.paper-item-meta {
+  margin-top: 8px;
   font-size: 0.72rem;
-  line-height: 1;
-  color: var(--accent);
-  margin-left: 1px;
+  color: var(--text-muted);
+}
+
+.paper-item-meta strong {
+  color: var(--text-secondary);
+  font-weight: 600;
 }
 
 /* Role badges – monochrome */
