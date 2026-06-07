@@ -250,18 +250,16 @@
       <div class="paper-list">
         ${sorted.map((p, i) => {
           const norm = normalizePaper(p);
-          const authors = norm.ordered.map(a =>
-            `<span class="pa">${escapeHtml(a.name)}</span>`
-          ).join('');
-          const metaItems = [];
-          if (norm.corresponding) {
-            metaItems.push(`<span class="meta-item"><span class="meta-k">Corresponding</span>${escapeHtml(norm.corresponding)}</span>`);
-          }
-          if (p.addedBy) {
-            metaItems.push(`<span class="meta-item"><span class="meta-k">Added by</span>${escapeHtml(p.addedBy)}` +
-              (p.timestamp ? ` · ${formatStamp(p.timestamp)}` : '') + `</span>`);
-          }
-          const meta = metaItems.length ? `<div class="paper-item-meta">${metaItems.join('')}</div>` : '';
+          const authors = norm.ordered.map(a => {
+            const isCorr = a.name === norm.corresponding;
+            return `<span class="pa">${escapeHtml(a.name)}` +
+              (isCorr ? '<span class="corr-note"> (Corresponding author)</span>' : '') +
+              `</span>`;
+          }).join('');
+          const meta = p.addedBy
+            ? `<div class="paper-item-meta"><span class="meta-item"><span class="meta-k">Added by</span>${escapeHtml(p.addedBy)}` +
+              (p.timestamp ? ` · ${formatStamp(p.timestamp)}` : '') + `</span></div>`
+            : '';
           return `
           <article class="paper-item">
             <div class="paper-item-top">
@@ -344,20 +342,27 @@
 
   // --- Actions ---
   function addPaper() {
-    const title = document.getElementById('paper-title').value.trim();
+    const titleInput = document.getElementById('paper-title');
+    const addedBySelect = document.getElementById('select-added-by');
+    const title = titleInput.value.trim();
     const date = document.getElementById('paper-date').value;
     const month = document.getElementById('paper-month').value;
 
     if (!title) {
       showToast('Please enter a paper title.');
+      titleInput.classList.add('field-error');
+      titleInput.focus();
       return;
     }
 
-    const addedBy = document.getElementById('select-added-by').value;
-    if (!addedBy) {
-      showToast('Please select who is adding this paper.');
+    if (!addedBySelect.value) {
+      showToast('Select your name in “Added by” before adding.');
+      addedBySelect.classList.add('field-error');
+      addedBySelect.focus();
+      addedBySelect.scrollIntoView({ behavior: 'smooth', block: 'center' });
       return;
     }
+    const addedBy = addedBySelect.value;
 
     const roles = {};
     POSITIONS.forEach(pos => {
@@ -466,9 +471,14 @@
           `<option value="${name}"${name === saved ? ' selected' : ''}>${name}</option>`
         ).join('');
       addedBySelect.addEventListener('change', () => {
+        addedBySelect.classList.remove('field-error');
         if (addedBySelect.value) localStorage.setItem(ADDED_BY_KEY, addedBySelect.value);
       });
     }
+
+    // Clear the title error highlight as soon as the user types.
+    const titleInput = document.getElementById('paper-title');
+    if (titleInput) titleInput.addEventListener('input', () => titleInput.classList.remove('field-error'));
 
     // Default date
     const dateInput = document.getElementById('paper-date');

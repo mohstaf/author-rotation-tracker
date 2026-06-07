@@ -352,6 +352,13 @@ body {
   color: var(--text-faint);
 }
 
+/* Required-field highlight (e.g. "Added by" when missing on Add) */
+.form-group input.field-error,
+.form-group select.field-error {
+  border-color: #d4564b;
+  box-shadow: 0 0 0 3px rgba(212, 86, 75, 0.14);
+}
+
 .form-group select {
   cursor: pointer;
   background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%239b9b9b' stroke-width='2'%3E%3Cpath d='M6 9l6 6 6-6'/%3E%3C/svg%3E");
@@ -595,7 +602,10 @@ body {
   color: var(--text-faint);
 }
 
-/* Author names are uniform; the corresponding author is named in the meta row below. */
+/* Inline "(Corresponding author)" note, follows whoever is corresponding */
+.paper-item-authors .corr-note {
+  color: var(--text-muted);
+}
 
 .paper-item-meta {
   display: flex;
