@@ -27,8 +27,17 @@
     'Abdirasak Sharif Ali',
     'Mohamed Abdirahim Omar',
     'Yahye Sheikh Abdulle Hassan',
-    'Mohamed Mustaf Ahmed'
+    'Mohamed Mustaf Ahmed',
+    'Abdullahi Abdisalam Mohamed'
   ];
+
+  // Ordered authorship positions (1st … 5th).
+  const POSITIONS = ['first', 'second', 'third', 'fourth', 'fifth'];
+  const POSITION_NUM = { first: '1', second: '2', third: '3', fourth: '4', fifth: '5' };
+  const POSITION_LABEL = {
+    first: '1st Author', second: '2nd Author', third: '3rd Author',
+    fourth: '4th Author', fifth: '5th Author'
+  };
 
   const MONTHS = [
     'January','February','March','April','May','June',
@@ -92,46 +101,49 @@
 
 
   // --- Rotation Algorithm ---
+  // Even 5-author cycle: the starting author advances by one each paper, so
+  // over any 5 papers every author holds every position (1st … 5th) once.
   function getNextSuggestion() {
-    if (papers.length === 0) {
-      return {
-        first: TEAM[0],
-        second: TEAM[1],
-        third: TEAM[2],
-        corresponding: TEAM[3]
-      };
-    }
-
-    const lastPaper = papers[papers.length - 1];
-    const lastRoles = lastPaper.roles;
-    const roleOrder = ['first', 'second', 'third', 'corresponding'];
+    const offset = papers.length % TEAM.length;
     const suggestion = {};
-
-    roleOrder.forEach((role, idx) => {
-      const nextRole = roleOrder[(idx + 1) % 4];
-      suggestion[nextRole] = lastRoles[role];
+    POSITIONS.forEach((pos, i) => {
+      suggestion[pos] = TEAM[(offset + i) % TEAM.length];
     });
-
     return suggestion;
+  }
+
+  // Normalize a stored paper (legacy 4-author or current 5-author format)
+  // into an ordered author list plus the corresponding author's name.
+  function normalizePaper(p) {
+    const r = p.roles || {};
+    // Current format: has fourth/fifth positions + a separate corresponding field.
+    if (r.fourth !== undefined || r.fifth !== undefined) {
+      const ordered = POSITIONS
+        .map(pos => ({ num: POSITION_NUM[pos], name: r[pos] }))
+        .filter(a => a.name);
+      return { ordered, corresponding: p.corresponding || r.fifth };
+    }
+    // Legacy format: first/second/third + corresponding (who was the last author).
+    const ordered = [
+      { num: '1', name: r.first },
+      { num: '2', name: r.second },
+      { num: '3', name: r.third },
+      { num: '4', name: r.corresponding }
+    ].filter(a => a.name);
+    return { ordered, corresponding: r.corresponding };
   }
 
   // --- Rendering ---
   function renderSuggestion() {
     const suggestion = getNextSuggestion();
     const container = document.getElementById('suggestion-grid');
-    const labels = {
-      first: '1st Author',
-      second: '2nd Author',
-      third: '3rd Author',
-      corresponding: 'Corresponding'
-    };
-    const numbers = { first: '1', second: '2', third: '3', corresponding: 'C' };
 
-    container.innerHTML = ['first', 'second', 'third', 'corresponding'].map(role => `
-      <div class="suggestion-item animate-in">
-        <div class="role-number">${numbers[role]}</div>
-        <div class="role-label">${labels[role]}</div>
-        <div class="author-name">${suggestion[role]}</div>
+    container.innerHTML = POSITIONS.map(pos => `
+      <div class="suggestion-item animate-in${pos === 'fifth' ? ' is-corresponding' : ''}">
+        <div class="role-number">${POSITION_NUM[pos]}</div>
+        <div class="role-label">${POSITION_LABEL[pos]}</div>
+        <div class="author-name">${suggestion[pos]}</div>
+        ${pos === 'fifth' ? '<div class="corr-tag">✉ Corresponding</div>' : ''}
       </div>
     `).join('');
 
@@ -139,16 +151,24 @@
   }
 
   function prefillForm(suggestion) {
-    const selects = {
-      first: document.getElementById('select-first'),
-      second: document.getElementById('select-second'),
-      third: document.getElementById('select-third'),
-      corresponding: document.getElementById('select-corresponding')
-    };
-
-    Object.keys(selects).forEach(role => {
-      if (selects[role]) selects[role].value = suggestion[role];
+    // Locked position selects follow the rotation.
+    POSITIONS.forEach(pos => {
+      const sel = document.getElementById('select-' + pos);
+      if (sel) sel.value = suggestion[pos];
     });
+
+    // Corresponding select lists the 5 suggested authors (by position + name).
+    const corrSelect = document.getElementById('select-corresponding');
+    if (corrSelect) {
+      const prev = corrSelect.value;
+      const names = POSITIONS.map(pos => suggestion[pos]);
+      corrSelect.innerHTML = POSITIONS.map(pos =>
+        `<option value="${suggestion[pos]}">${POSITION_NUM[pos]} · ${suggestion[pos]}</option>`
+      ).join('');
+      // Preserve a still-valid manual choice; otherwise default to the last author.
+      corrSelect.value = names.includes(prev) ? prev : suggestion.fifth;
+    }
+    syncCorrControl();
 
     const dateInput = document.getElementById('paper-date');
     if (dateInput && !dateInput.value) {
@@ -159,6 +179,20 @@
     const monthSelect = document.getElementById('paper-month');
     if (monthSelect) {
       monthSelect.value = MONTHS[new Date().getMonth()];
+    }
+  }
+
+  // Keep the corresponding control in sync with the "last author is corresponding" toggle.
+  function syncCorrControl() {
+    const corrIsLast = document.getElementById('corr-is-last');
+    const corrSelect = document.getElementById('select-corresponding');
+    if (!corrIsLast || !corrSelect) return;
+    if (corrIsLast.checked) {
+      const fifth = document.getElementById('select-fifth');
+      if (fifth) corrSelect.value = fifth.value;
+      corrSelect.disabled = true;   // locked to the last author
+    } else {
+      corrSelect.disabled = false;  // user may choose any author
     }
   }
 
@@ -188,7 +222,9 @@
     const sorted = [...papers].reverse();
     container.innerHTML = `
       <div class="paper-list">
-        ${sorted.map((p, i) => `
+        ${sorted.map((p, i) => {
+          const norm = normalizePaper(p);
+          return `
           <article class="paper-card">
             <div class="paper-card-top">
               <span class="paper-card-num">#${papers.length - i}</span>
@@ -199,13 +235,17 @@
             </div>
             <h3 class="paper-card-title">${escapeHtml(p.title)}</h3>
             <div class="paper-card-authors">
-              <span class="author-chip role-1"><span class="chip-role">1</span><span class="chip-name">${escapeHtml(p.roles.first)}</span></span>
-              <span class="author-chip role-2"><span class="chip-role">2</span><span class="chip-name">${escapeHtml(p.roles.second)}</span></span>
-              <span class="author-chip role-3"><span class="chip-role">3</span><span class="chip-name">${escapeHtml(p.roles.third)}</span></span>
-              <span class="author-chip role-c"><span class="chip-role">C</span><span class="chip-name">${escapeHtml(p.roles.corresponding)}</span></span>
+              ${norm.ordered.map(a => {
+                const isCorr = a.name === norm.corresponding;
+                return `<span class="author-chip role-${a.num}${isCorr ? ' is-corresponding' : ''}">` +
+                  `<span class="chip-role">${a.num}</span>` +
+                  `<span class="chip-name">${escapeHtml(a.name)}</span>` +
+                  (isCorr ? '<span class="chip-corr" title="Corresponding author">✉</span>' : '') +
+                  `</span>`;
+              }).join('')}
             </div>
-          </article>
-        `).join('')}
+          </article>`;
+        }).join('')}
       </div>`;
   }
 
@@ -223,19 +263,24 @@
 
     const stats = {};
     TEAM.forEach(name => {
-      stats[name] = { first: 0, second: 0, third: 0, corresponding: 0 };
+      stats[name] = { first: 0, second: 0, third: 0, fourth: 0, fifth: 0, corresponding: 0 };
     });
 
     papers.forEach(p => {
-      Object.keys(p.roles).forEach(role => {
-        const author = p.roles[role];
-        if (stats[author]) stats[author][role]++;
+      const norm = normalizePaper(p);
+      norm.ordered.forEach(a => {
+        const pos = POSITIONS[Number(a.num) - 1]; // '1' -> first … '5' -> fifth
+        if (pos && stats[a.name]) stats[a.name][pos]++;
       });
+      if (stats[norm.corresponding]) stats[norm.corresponding].corresponding++;
     });
 
     const maxCount = Math.max(1, ...Object.values(stats).flatMap(s => Object.values(s)));
 
-    const roleLabels = { first: '1st', second: '2nd', third: '3rd', corresponding: 'Corresp.' };
+    const rows = [
+      ['first', '1st'], ['second', '2nd'], ['third', '3rd'],
+      ['fourth', '4th'], ['fifth', '5th'], ['corresponding', 'Corresp.']
+    ];
 
     container.innerHTML = `
       <div class="stats-grid">
@@ -243,13 +288,13 @@
           <div class="stat-card animate-in">
             <div class="author-name">${name}</div>
             <div class="stat-bars">
-              ${['first', 'second', 'third', 'corresponding'].map(role => `
+              ${rows.map(([key, label]) => `
                 <div class="stat-row">
-                  <span class="stat-label">${roleLabels[role]}</span>
+                  <span class="stat-label">${label}</span>
                   <div class="stat-bar-track">
-                    <div class="stat-bar-fill" style="width: ${(stats[name][role] / maxCount) * 100}%"></div>
+                    <div class="stat-bar-fill" style="width: ${(stats[name][key] / maxCount) * 100}%"></div>
                   </div>
-                  <span class="stat-count">${stats[name][role]}</span>
+                  <span class="stat-count">${stats[name][key]}</span>
                 </div>
               `).join('')}
             </div>
@@ -281,26 +326,29 @@
       return;
     }
 
-    const roles = {
-      first: document.getElementById('select-first').value,
-      second: document.getElementById('select-second').value,
-      third: document.getElementById('select-third').value,
-      corresponding: document.getElementById('select-corresponding').value
-    };
+    const roles = {};
+    POSITIONS.forEach(pos => {
+      roles[pos] = document.getElementById('select-' + pos).value;
+    });
 
-    // Check for duplicate assignments
-    const assigned = Object.values(roles);
-    const unique = new Set(assigned);
-    if (unique.size !== 4) {
-      showToast('Each author must have a unique role.');
+    // Positions come from the locked rotation, so they should all be distinct.
+    if (new Set(Object.values(roles)).size !== POSITIONS.length) {
+      showToast('Each author must hold a unique position.');
       return;
     }
+
+    // Corresponding author: the last author by default, or a manual choice.
+    const corrIsLast = document.getElementById('corr-is-last');
+    const corresponding = (corrIsLast && corrIsLast.checked)
+      ? roles.fifth
+      : document.getElementById('select-corresponding').value;
 
     const paper = {
       title,
       date: date || new Date().toISOString().split('T')[0],
       month,
       roles,
+      corresponding,
       timestamp: Date.now()
     };
 
@@ -349,8 +397,8 @@
   function init() {
     initTheme();
 
-    // Build selects
-    ['select-first', 'select-second', 'select-third', 'select-corresponding'].forEach(id => {
+    // Build locked position selects (the corresponding select is filled in prefillForm)
+    ['select-first', 'select-second', 'select-third', 'select-fourth', 'select-fifth'].forEach(id => {
       const select = document.getElementById(id);
       if (select) {
         select.innerHTML = TEAM.map(name =>
@@ -358,6 +406,10 @@
         ).join('');
       }
     });
+
+    // Corresponding-author toggle
+    const corrIsLast = document.getElementById('corr-is-last');
+    if (corrIsLast) corrIsLast.addEventListener('change', syncCorrControl);
 
     // Default date
     const dateInput = document.getElementById('paper-date');
