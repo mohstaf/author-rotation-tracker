@@ -250,10 +250,9 @@
       <div class="paper-list">
         ${sorted.map((p, i) => {
           const norm = normalizePaper(p);
-          const authors = norm.ordered.map(a => {
-            const isCorr = a.name === norm.corresponding;
-            return `<span class="pa${isCorr ? ' is-corr' : ''}">${escapeHtml(a.name)}</span>`;
-          }).join('');
+          const authors = norm.ordered.map(a =>
+            `<span class="pa">${escapeHtml(a.name)}</span>`
+          ).join('');
           const metaItems = [];
           if (norm.corresponding) {
             metaItems.push(`<span class="meta-item"><span class="meta-k">Corresponding</span>${escapeHtml(norm.corresponding)}</span>`);

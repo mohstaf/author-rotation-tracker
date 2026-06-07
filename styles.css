@@ -595,11 +595,7 @@ body {
   color: var(--text-faint);
 }
 
-/* Corresponding author — quiet emphasis; the explicit label lives in the meta row */
-.paper-item-authors .pa.is-corr {
-  color: var(--text-primary);
-  font-weight: 500;
-}
+/* Author names are uniform; the corresponding author is named in the meta row below. */
 
 .paper-item-meta {
   display: flex;
