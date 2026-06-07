@@ -187,35 +187,25 @@
 
     const sorted = [...papers].reverse();
     container.innerHTML = `
-      <div class="table-container">
-        <table>
-          <thead>
-            <tr>
-              <th>#</th>
-              <th>Title</th>
-              <th>Month</th>
-              <th>Date</th>
-              <th>1st Author</th>
-              <th>2nd Author</th>
-              <th>3rd Author</th>
-              <th>Corresponding</th>
-            </tr>
-          </thead>
-          <tbody>
-            ${sorted.map((p, i) => `
-              <tr>
-                <td class="paper-number">${papers.length - i}</td>
-                <td class="paper-title-cell" title="${escapeHtml(p.title)}">${escapeHtml(p.title)}</td>
-                <td class="paper-month-cell">${p.month || '—'}</td>
-                <td class="paper-date-cell">${formatDate(p.date)}</td>
-                <td class="paper-author-cell">${p.roles.first}</td>
-                <td class="paper-author-cell">${p.roles.second}</td>
-                <td class="paper-author-cell">${p.roles.third}</td>
-                <td class="paper-author-cell">${p.roles.corresponding}</td>
-              </tr>
-            `).join('')}
-          </tbody>
-        </table>
+      <div class="paper-list">
+        ${sorted.map((p, i) => `
+          <article class="paper-card">
+            <div class="paper-card-top">
+              <span class="paper-card-num">#${papers.length - i}</span>
+              <span class="paper-card-date">
+                <span class="paper-card-month">${escapeHtml(p.month || '—')}</span>
+                ${formatDate(p.date)}
+              </span>
+            </div>
+            <h3 class="paper-card-title">${escapeHtml(p.title)}</h3>
+            <div class="paper-card-authors">
+              <span class="author-chip role-1"><span class="chip-role">1</span><span class="chip-name">${escapeHtml(p.roles.first)}</span></span>
+              <span class="author-chip role-2"><span class="chip-role">2</span><span class="chip-name">${escapeHtml(p.roles.second)}</span></span>
+              <span class="author-chip role-3"><span class="chip-role">3</span><span class="chip-name">${escapeHtml(p.roles.third)}</span></span>
+              <span class="author-chip role-c"><span class="chip-role">C</span><span class="chip-name">${escapeHtml(p.roles.corresponding)}</span></span>
+            </div>
+          </article>
+        `).join('')}
       </div>`;
   }
 

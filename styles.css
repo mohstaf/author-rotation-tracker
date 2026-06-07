@@ -447,82 +447,121 @@ body {
   border-bottom-color: var(--accent);
 }
 
-/* --- Table --- */
-.table-container {
-  overflow-x: auto;
+/* --- Paper Cards --- */
+.paper-list {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  padding-top: 18px;
 }
 
-table {
-  width: 100%;
-  border-collapse: collapse;
+.paper-card {
+  background: var(--bg-secondary);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  padding: 16px 18px;
+  transition: border-color var(--transition), background var(--transition-slow);
 }
 
-thead th {
-  text-align: left;
-  font-size: 0.7rem;
+.paper-card:hover {
+  border-color: var(--border-strong);
+}
+
+.paper-card-top {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  margin-bottom: 9px;
+}
+
+.paper-card-num {
+  font-size: 0.72rem;
   font-weight: 700;
-  text-transform: uppercase;
-  letter-spacing: 0.8px;
-  color: var(--text-muted);
-  padding: 10px 12px;
-  border-bottom: 1px solid var(--border);
-  white-space: nowrap;
-  position: sticky;
-  top: 0;
-  background: var(--bg-main);
-}
-
-tbody tr {
-  transition: background var(--transition);
-}
-
-tbody tr:hover {
-  background: var(--bg-hover);
-}
-
-tbody td {
-  padding: 12px;
-  font-size: 0.88rem;
-  border-bottom: 1px solid var(--border);
-  vertical-align: middle;
-}
-
-.paper-number {
   color: var(--text-faint);
-  font-size: 0.82rem;
+  font-variant-numeric: tabular-nums;
+  letter-spacing: 0.3px;
+}
+
+.paper-card-date {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 0.74rem;
   font-weight: 500;
+  color: var(--text-muted);
   font-variant-numeric: tabular-nums;
 }
 
-.paper-title-cell {
-  font-weight: 500;
-  min-width: 240px;
-  max-width: 380px;
-  white-space: normal;
+.paper-card-month {
+  text-transform: uppercase;
+  letter-spacing: 0.6px;
+  font-weight: 700;
+  font-size: 0.62rem;
+  color: var(--text-secondary);
+  background: var(--accent-subtle);
+  padding: 3px 8px;
+  border-radius: 4px;
+}
+
+.paper-card-title {
+  font-size: 0.98rem;
+  font-weight: 600;
+  line-height: 1.45;
+  color: var(--text-primary);
+  margin-bottom: 14px;
+  letter-spacing: -0.2px;
   overflow-wrap: anywhere;
+}
+
+.paper-card-authors {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 7px;
+}
+
+.author-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  padding: 3px 12px 3px 3px;
+  border-radius: 20px;
+  background: var(--bg-input);
+  border: 1px solid var(--border);
+  font-size: 0.78rem;
+  font-weight: 500;
+  color: var(--text-secondary);
+  transition: border-color var(--transition), color var(--transition);
+}
+
+.author-chip:hover {
+  border-color: var(--border-strong);
   color: var(--text-primary);
 }
 
-.paper-date-cell {
-  color: var(--text-secondary);
-  font-size: 0.82rem;
-  white-space: nowrap;
-  font-variant-numeric: tabular-nums;
+.author-chip .chip-role {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 20px;
+  height: 20px;
+  border-radius: 50%;
+  font-size: 0.66rem;
+  font-weight: 700;
+  flex-shrink: 0;
 }
 
-.paper-month-cell {
-  color: var(--text-secondary);
-  font-size: 0.82rem;
-  white-space: nowrap;
-  font-weight: 500;
+.author-chip.role-1 .chip-role { background: var(--role-1-bg); color: var(--role-1); }
+.author-chip.role-2 .chip-role { background: var(--role-2-bg); color: var(--role-2); }
+.author-chip.role-3 .chip-role { background: var(--role-3-bg); color: var(--role-3); }
+
+.author-chip.role-c {
+  border-color: var(--border-strong);
 }
 
-/* Author cells in table – always one line */
-.paper-author-cell {
-  font-size: 0.82rem;
-  white-space: nowrap;
-  color: var(--text-primary);
-  font-weight: 500;
+.author-chip.role-c .chip-role {
+  background: var(--accent);
+  color: var(--bg-main);
 }
 
 /* Role badges – monochrome */
@@ -742,12 +781,3 @@ tbody td {
 .animate-in:nth-child(2) { animation-delay: 0.04s; }
 .animate-in:nth-child(3) { animation-delay: 0.08s; }
 .animate-in:nth-child(4) { animation-delay: 0.12s; }
-
-/* Tooltip-style title hover */
-.paper-title-cell {
-  position: relative;
-}
-
-.paper-title-cell:hover {
-  color: var(--accent);
-}
